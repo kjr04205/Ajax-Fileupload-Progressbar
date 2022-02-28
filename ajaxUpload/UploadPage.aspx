@@ -164,19 +164,34 @@
         var addFileTxt = "";
         var fileSizeValue = 0;
         var fileSizeValueTotal = 0;
+        const upload_target = document.getElementById('btnUpload');
+        const delete_target = document.getElementById('btnDelete');
+        upload_target.disabled = false;
+        delete_target.disabled = false;
 
         $('.selectFile').change(function () {
+            var maxSize = 2147483648;
             var tmp = document.getElementById('files').files;
-
+            var tmp_size = document.getElementById('files').files[0].size;
+            if (maxSize <= tmp_size) {
+                alert('업로드오류 : 최대 업로드 파일크기는 2GB입니다.');
+                return false;
+            }
             if (fileList == undefined) {
                 alert("선택한 파일이 없습니다. 파일을 선택해주세요.");
             } else {
                 $('.progress_wrap').css('display', 'block');
                 $('.fileListTxt').css('display', 'block');
+                $('.fileSizeTotal').css('display', 'block');
+
                 for (const file of tmp) {
                     fileSizeValue = parseFloat((file.size / (1024 * 1024)).toFixed(2));
                     fileSizeValueTotal = parseFloat((fileSizeValueTotal + fileSizeValue).toFixed(2));
 
+                    if (fileSizeValueTotal >= 2000) {
+                        alert('최대업로드 가능크기를 넘었습니다. 최대 업로드 가능크기는 2GB입니다.');
+                        return false;
+                    }
                     console.log("fileSizeValue = " + fileSizeValue);
                     console.log("fileSizeValueTotal = " + fileSizeValueTotal);
 
@@ -232,6 +247,9 @@
                     success: function (data) {
                         alert("파일업로드가 완료되었습니다.");
                         $('.progress-bar').text("업로드가 완료되었습니다.");
+
+                        upload_target.disabled = false;
+                        delete_target.disabled = false;
                     },
                     error: function (data) {
                         alert('error : ' + JSON.stringify(data));
@@ -247,13 +265,17 @@
 
                                 $('.progress-bar').css('width', percentComplete + '%').attr('aria-valuenow', percentComplete);
                                 $('.progress-bar').text(percentComplete + '%');
-                                
+
+                                upload_target.disabled = true;
+                                delete_target.disabled = true;
+
                                 if ($('.progress-bar').text() == '100%') {
                                     $('.progress-bar').text('로컬폴더 업로드 진행중...');
                                 }
                                 console.log(percentComplete);
                             }
                         }, false);
+                        
                         return xhr;
                     },
                 });
@@ -266,9 +288,12 @@
             if (fileList != "") {
                 fileList = [];
                 if (fileList == "") {
-                    console.log(fileList.length);
+                    fileSizeValue = 0;
+                    fileSizeValueTotal = 0;
+                    $('.fileSizeTotal').css('display','none');
+
                     $('.addFileTxt_file').remove();
-                    $('.progress').remove();
+                    //$('.progress').remove();
                     $('.progress_wrap').css('display', 'none');
                     $('.fileListTxt').css('display', 'none');
                     $('.progress-bar').css('width', '0%');
