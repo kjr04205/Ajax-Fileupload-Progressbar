@@ -164,6 +164,9 @@
         var addFileTxt = "";
         var fileSizeValue = 0;
         var fileSizeValueTotal = 0;
+        var index = 0;
+        var folderName = "";
+        var folderValue = "";
         const upload_target = document.getElementById('btnUpload');
         const delete_target = document.getElementById('btnDelete');
         upload_target.disabled = false;
@@ -228,61 +231,87 @@
                     j++
                     console.log("현재 담겨있는 file = " + file.name);
                 }*/
-                var formData = new FormData();
-                var fileUpload = $('#files').get(0);
-                
-                var folderName = $("#cmbFileGroup option:selected").text();
-                var folderValue = $("#cmbFileGroup option:selected").val();
-                formData.append("folderName", folderName);
-                formData.append("folderValue", folderValue);
-                
-                for (var i = 0; i < fileList.length; i++) {
-                    formData.append(fileList[i].name, fileList[i]);
-                    
-                }
-                $.ajax({
-                    url: "UploadHandler.ashx",
-                    type: 'POST',
-                    data: formData,
-                    success: function (data) {
-                        alert("파일업로드가 완료되었습니다.");
+            
+                uploadAjax(fileList, index, function (err, res) {
+                    if (err) { alert('error 호출한곳: ' + JSON.stringify(data)) }
+                    else {
+                        console.log("success 3");
                         $('.progress-bar').text("업로드가 완료되었습니다.");
 
                         upload_target.disabled = false;
                         delete_target.disabled = false;
-                    },
-                    error: function (data) {
-                        alert('error : ' + JSON.stringify(data));
-                    },
-                    cache: false,
-                    contentType: false,
-                    processData: false,
-                    xhr: function () {
-                        var xhr = new window.XMLHttpRequest();
-                        xhr.upload.addEventListener("progress", function (evt) {
-                            if (evt.lengthComputable) {
-                                var percentComplete = Math.round((evt.loaded / evt.total) * 100);
-
-                                $('.progress-bar').css('width', percentComplete + '%').attr('aria-valuenow', percentComplete);
-                                $('.progress-bar').text(percentComplete + '%');
-
-                                upload_target.disabled = true;
-                                delete_target.disabled = true;
-
-                                if ($('.progress-bar').text() == '100%') {
-                                    $('.progress-bar').text('로컬폴더 업로드 진행중...');
-                                }
-                                console.log(percentComplete);
-                            }
-                        }, false);
-                        
-                        return xhr;
-                    },
+                    }
                 });
+                
+                /*for (var i = 0; i < fileList.length; i++) {
+                    formData.append(fileList[i].name, fileList[i]);
+                    console.log(i + "번째 파일 담음");
+                    uploadAjax(formData);
+                }*/
+                
             } else {
                 alert("선택된 파일이 없습니다. 파일을 선택해주세요.");
+                console.log('선택된 파일없음');
             }
         });
+        function uploadAjax(fileList, index, callback) {
+            console.log("함수 호출당함");
+            if (fileList.length <= index) {
+                console.log("success 1");
+                callback(null, 'success');
+                return;
+            } else {
+                console.log("index가 더큰데 안멈춤");
+            }
+
+            var formData = new FormData();
+
+            console.log("오류나는 거 위에서 index값 = " + index);
+            formData.append(fileList[index].name, fileList[index]);
+
+            folderName = $("#cmbFileGroup option:selected").text();
+            folderValue = $("#cmbFileGroup option:selected").val();
+            formData.append("folderName", folderName);
+            formData.append("folderValue", folderValue);
+
+            $.ajax({
+                url: "UploadHandler.ashx",
+                type: 'POST',
+                data: formData,
+                success: function (data) {
+                    console.log("success 2");
+                    console.log("success2 에서 index = " + index);
+                    uploadAjax(fileList, ++index, callback);
+                },
+                error: function (data) {
+                    alert('error함수안 : ' + JSON.stringify(data));
+                },
+                cache: false,
+                contentType: false,
+                processData: false,
+                xhr: function () {
+                    var xhr = new window.XMLHttpRequest();
+                    xhr.upload.addEventListener("progress", function (evt) {
+                        if (evt.lengthComputable) {
+                            var percentComplete = Math.round((evt.loaded / evt.total) * 100);
+
+                            $('.progress-bar').css('width', percentComplete + '%').attr('aria-valuenow', percentComplete);
+                            $('.progress-bar').text(percentComplete + '%');
+
+                            upload_target.disabled = true;
+                            delete_target.disabled = true;
+
+                            if ($('.progress-bar').text() == '100%') {
+                                $('.progress-bar').text('로컬폴더 업로드 진행중...');
+                            }
+                            console.log(percentComplete);
+                        }
+                    }, false);
+
+                    return xhr;
+                },
+            });
+        }
 
         $("#btnDelete").on('click', function () {
             if (fileList != "") {
@@ -297,7 +326,6 @@
                     $('.progress_wrap').css('display', 'none');
                     $('.fileListTxt').css('display', 'none');
                     $('.progress-bar').css('width', '0%');
-                    alert("파일리스트 초기화 완료");
                 } else {
                     alert("파일리스트 초기화 오류 : 관리자에게 문의해주세요.");
                 }

@@ -24,26 +24,22 @@ namespace DMSTransPC.SubForm
             string folderValue = context.Request["folderValue"];
 
             HttpFileCollection files = context.Request.Files;
-            string[] test2 = files.AllKeys;
             string fileName = "";
-            
+
+            DirectoryInfo di = new DirectoryInfo(Configuration.Instance.uploadfolder + "\\" + folderName + "\\");
+
+            if (di.Exists == false)
+            {
+                di.Create();
+            }
+
             foreach (string key in files)
             {
-                string test = key;
                 HttpPostedFile file = files[key];
                 fileName = file.FileName;
                 
-                DirectoryInfo di = new DirectoryInfo(Configuration.Instance.uploadfolder + "\\" + folderName + "\\");
-                
-                if (di.Exists == false)   
-                {
-                    di.Create();              
-                }
                 string onlyFileName = "";
                 onlyFileName = fileName;
-
-                /* 파일 저장 절대 경로 지정 */
-                //fileName = "D:\\uploads\\" + fileName;
 
                 string fullName = di + onlyFileName;
 
@@ -54,7 +50,8 @@ namespace DMSTransPC.SubForm
             context.Response.ContentType = "text/plain";
             context.Response.Write("success");
         }
-
+        /* 파일 저장 절대 경로 지정 */
+        //fileName = "D:\\uploads\\" + fileName;
         public bool IsReusable
         {
             get
