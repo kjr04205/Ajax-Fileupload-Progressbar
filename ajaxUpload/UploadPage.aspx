@@ -22,7 +22,10 @@
            margin:0;
            padding:0;
         }
-        
+        body{
+            min-width:652px;
+            overflow:auto;
+        }
         .container{
             padding:10px;
         }
@@ -162,6 +165,9 @@
     <script>
         var fileList = [];
         var addFileTxt = "";
+        var addIcon = "";
+        var iconNumber = 1;
+        var checkNumber = 1;
         var fileSizeValue = 0;
         var fileSizeValueTotal = 0;
         var index = 0;
@@ -176,12 +182,15 @@
             var maxSize = 2147483648;
             var tmp = document.getElementById('files').files;
             var tmp_size = document.getElementById('files').files[0].size;
-            if (maxSize <= tmp_size) {
+            /*if (maxSize <= tmp_size) {
                 alert('업로드오류 : 최대 업로드 파일크기는 2GB입니다.');
                 return false;
-            }
+            }*/
             if (fileList == undefined) {
                 alert("선택한 파일이 없습니다. 파일을 선택해주세요.");
+            } else if (tmp_size > maxSize) {
+                alert("최대파일크기는 2GB입니다.");
+                return false;
             } else {
                 $('.progress_wrap').css('display', 'block');
                 $('.fileListTxt').css('display', 'block');
@@ -191,10 +200,6 @@
                     fileSizeValue = parseFloat((file.size / (1024 * 1024)).toFixed(2));
                     fileSizeValueTotal = parseFloat((fileSizeValueTotal + fileSizeValue).toFixed(2));
 
-                    if (fileSizeValueTotal >= 2000) {
-                        alert('최대업로드 가능크기를 넘었습니다. 최대 업로드 가능크기는 2GB입니다.');
-                        return false;
-                    }
                     console.log("fileSizeValue = " + fileSizeValue);
                     console.log("fileSizeValueTotal = " + fileSizeValueTotal);
 
@@ -208,11 +213,15 @@
                     
                     console.log(fileList.length);
                     addFileTxt = '<div class="addFileTxt_file">';
-                    addFileTxt += '<p class="addFileTxt_file_name">';
+                    addFileTxt += '<p class="addFileTxt_file_name" style="display:inline-block;">';
                     addFileTxt += file.name;
                     addFileTxt += '</p>';
+                    addFileTxt += '<img src="../image/circle.png" class="circle' +iconNumber+'"style="display:inline-block; width:17px; height:17px; margin-top:2px; float:right;">';
+
+                    addFileTxt += '</img>';
                     addFileTxt += '</div>';
                     $('.fileListTxt').append(addFileTxt);
+                    iconNumber++;
                 }
             }
         });
@@ -243,30 +252,20 @@
                     }
                 });
                 
-                /*for (var i = 0; i < fileList.length; i++) {
-                    formData.append(fileList[i].name, fileList[i]);
-                    console.log(i + "번째 파일 담음");
-                    uploadAjax(formData);
-                }*/
-                
             } else {
                 alert("선택된 파일이 없습니다. 파일을 선택해주세요.");
                 console.log('선택된 파일없음');
             }
         });
         function uploadAjax(fileList, index, callback) {
-            console.log("함수 호출당함");
+            
             if (fileList.length <= index) {
                 console.log("success 1");
                 callback(null, 'success');
                 return;
-            } else {
-                console.log("index가 더큰데 안멈춤");
             }
-
             var formData = new FormData();
 
-            console.log("오류나는 거 위에서 index값 = " + index);
             formData.append(fileList[index].name, fileList[index]);
 
             folderName = $("#cmbFileGroup option:selected").text();
@@ -280,11 +279,13 @@
                 data: formData,
                 success: function (data) {
                     console.log("success 2");
-                    console.log("success2 에서 index = " + index);
+                    $('.circle' + checkNumber).attr("src", "../image/check.png");
+                    checkNumber++;
+                    
                     uploadAjax(fileList, ++index, callback);
                 },
                 error: function (data) {
-                    alert('error함수안 : ' + JSON.stringify(data));
+                    alert('비동기 처리 중 error : ' + JSON.stringify(data));
                 },
                 cache: false,
                 contentType: false,
@@ -317,12 +318,13 @@
             if (fileList != "") {
                 fileList = [];
                 if (fileList == "") {
+                    checkNumber = 1;
+                    iconNumber = 1;
                     fileSizeValue = 0;
                     fileSizeValueTotal = 0;
                     $('.fileSizeTotal').css('display','none');
 
                     $('.addFileTxt_file').remove();
-                    //$('.progress').remove();
                     $('.progress_wrap').css('display', 'none');
                     $('.fileListTxt').css('display', 'none');
                     $('.progress-bar').css('width', '0%');
