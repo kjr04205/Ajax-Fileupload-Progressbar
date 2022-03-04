@@ -23,6 +23,7 @@
            padding:0;
         }
         body{
+            max-width:653px;
             min-width:652px;
             overflow:auto;
         }
@@ -113,15 +114,32 @@
         .fileListTxt{
             display:none;
             margin:0 20px;
-            padding:15px;
             border:1px solid #bbb;
+            max-width:630px;
+        }
+        .fileListTxt > ul{
+            border-bottom:1px solid #bbb;
+        }
+        /*.fileListTxt li{
+            list-style:none;
+            display:inline-block;
+            text-align:center;
+        }
+        .fileListTxt li.fileListTxt_Name{
+            width:99%;
+        }*/
+        
+        .fileListTxt .fileListTxt_wrap{
+            padding:10px 15px 0;
         }
         .progress_wrap{
             display:none;
         }
         .progress{
+            max-width:612px;
             margin: 10px 0 !important;
             border:1px solid #bbb;
+            height:25px;
         }
         .fileSize{
             margin:20px 10px 10px;
@@ -129,6 +147,12 @@
         .fileSize .fileSizeTotal{
             font-size:13px;
             letter-spacing:-0.5px;
+        }
+        .progress-bar{
+            height:25px;
+        }
+        .addFileTxt_file_name{
+            max-width:530px;
         }
     </style>
     <form id="form" runat="server">
@@ -149,10 +173,11 @@
             </div>
             <div class="fileSize">
                 <p class="fileSizeTotal"></p>
+                <p class="fileSizeProgress"></p>
             </div>
             <div class="col-md-3 progress_wrap" style="padding:0 10px;">
                 <div class="progress">
-                    <div class="progress-bar" role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100" style="width: 0%">
+                    <div class="progress-bar" role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100" style="width: 0%; padding-top:2px;">
                     </div> 
                 </div>
             </div>
@@ -160,14 +185,23 @@
         </div>
     </form>
     <div class="fileListTxt">
-                
+        <%-- <ul>
+            <li class="fileListTxt_Name">FileList</li>
+        </ul> --%>
+        <div class="fileListTxt_wrap">
+
+        </div>
     </div>
+    <%-- 비동기 파일 업로드 컨트롤 --%>
     <script>
         var fileList = [];
         var addFileTxt = "";
         var addIcon = "";
+        // iconNumber => 파일업로드 완료전 아이콘 컨트롤 넘버, checkNumber => 파일업로드 완료후 아이콘 컨트롤 넘버
+        // 체크 icon color #2196f3
         var iconNumber = 1;
         var checkNumber = 1;
+
         var fileSizeValue = 0;
         var fileSizeValueTotal = 0;
         var index = 0;
@@ -182,14 +216,11 @@
             var maxSize = 2147483648;
             var tmp = document.getElementById('files').files;
             var tmp_size = document.getElementById('files').files[0].size;
-            /*if (maxSize <= tmp_size) {
-                alert('업로드오류 : 최대 업로드 파일크기는 2GB입니다.');
-                return false;
-            }*/
+            
             if (fileList == undefined) {
                 alert("선택한 파일이 없습니다. 파일을 선택해주세요.");
             } else if (tmp_size > maxSize) {
-                alert("최대파일크기는 2GB입니다.");
+                alert("파일의 최대 크기는 2GB입니다.");
                 return false;
             } else {
                 $('.progress_wrap').css('display', 'block');
@@ -211,7 +242,8 @@
                     
                     fileList.push(file);
                     
-                    console.log(fileList.length);
+                    /* 파일 완료를 알릴 아이콘 추가 (완료전) */
+
                     addFileTxt = '<div class="addFileTxt_file">';
                     addFileTxt += '<p class="addFileTxt_file_name" style="display:inline-block;">';
                     addFileTxt += file.name;
@@ -220,7 +252,8 @@
 
                     addFileTxt += '</img>';
                     addFileTxt += '</div>';
-                    $('.fileListTxt').append(addFileTxt);
+                    $('.fileListTxt_wrap').append(addFileTxt);
+
                     iconNumber++;
                 }
             }
@@ -228,21 +261,9 @@
 
         $("#btnUpload").on('click', function () {
             if (fileList != "") {
-                /*var j = 1;
-                for (const file of fileList) {
-                    addFileTxt = '<div class="progress">';
-                    addFileTxt += '<div class="progress-bar" role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100">';
-                    addFileTxt += '</div>';
-                    addFileTxt += '</div>';
-                    
-                    $('.progress_wrap').append(addFileTxt);
-                    $('.progress_wrap .progress:nth-child(' + j + ') .progress-bar').addClass('progress-bar' + j);
-                    j++
-                    console.log("현재 담겨있는 file = " + file.name);
-                }*/
-            
+                
                 uploadAjax(fileList, index, function (err, res) {
-                    if (err) { alert('error 호출한곳: ' + JSON.stringify(data)) }
+                    if (err) { alert('error : ' + JSON.stringify(data)) }
                     else {
                         console.log("success 3");
                         $('.progress-bar').text("업로드가 완료되었습니다.");
@@ -257,6 +278,8 @@
                 console.log('선택된 파일없음');
             }
         });
+
+        /* 파일 업로드 진행 formData 생성, 실제 ajax 진행 */
         function uploadAjax(fileList, index, callback) {
             
             if (fileList.length <= index) {
@@ -296,6 +319,7 @@
                         if (evt.lengthComputable) {
                             var percentComplete = Math.round((evt.loaded / evt.total) * 100);
 
+                            $('.fileSizeProgress').text(evt.loaded);
                             $('.progress-bar').css('width', percentComplete + '%').attr('aria-valuenow', percentComplete);
                             $('.progress-bar').text(percentComplete + '%');
 
@@ -314,6 +338,7 @@
             });
         }
 
+        /* 파일리스트 초기화 */
         $("#btnDelete").on('click', function () {
             if (fileList != "") {
                 fileList = [];
