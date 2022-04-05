@@ -113,7 +113,7 @@
         }
         .fileListTxt{
             display:none;
-            margin:0 20px;
+            margin:0 20px 20px;
             border:1px solid #bbb;
             max-width:630px;
         }
@@ -151,8 +151,15 @@
         .progress-bar{
             height:25px;
         }
+        .addFileTxt_file{
+            border-bottom:1px solid #bbb;
+            margin-bottom:10px;
+        }
         .addFileTxt_file_name{
-            max-width:530px;
+            max-width:480px;
+            text-overflow:ellipsis;
+            letter-spacing:-0.5px;
+            font-size:13px;
         }
     </style>
     <form id="form" runat="server">
@@ -185,9 +192,6 @@
         </div>
     </form>
     <div class="fileListTxt">
-        <%-- <ul>
-            <li class="fileListTxt_Name">FileList</li>
-        </ul> --%>
         <div class="fileListTxt_wrap">
 
         </div>
@@ -209,12 +213,19 @@
         var folderValue = "";
         const upload_target = document.getElementById('btnUpload');
         const delete_target = document.getElementById('btnDelete');
+        const select_target = document.getElementById('files');
+        var tmp = []; /* 선택된 파일 담길 리스트 선언 및 초기화 */
         upload_target.disabled = false;
         delete_target.disabled = false;
-
+        console.log("파일 체인지까지 안간상태");
         $('.selectFile').change(function () {
+            console.log("change");
+
             var maxSize = 2147483648;
-            var tmp = document.getElementById('files').files;
+
+            /* 선택된 파일 tmp에 담음 */
+            tmp = document.getElementById('files').files;
+
             var tmp_size = document.getElementById('files').files[0].size;
             
             if (fileList == undefined) {
@@ -223,11 +234,13 @@
                 alert("파일의 최대 크기는 2GB입니다.");
                 return false;
             } else {
+
                 $('.progress_wrap').css('display', 'block');
                 $('.fileListTxt').css('display', 'block');
                 $('.fileSizeTotal').css('display', 'block');
 
-                for (const file of tmp) {
+                /* IE 지원문제로 인해 javascript for of문 -> jQuery each문으로 변경 */
+                $.each(tmp, function (idx, file) {
                     fileSizeValue = parseFloat((file.size / (1024 * 1024)).toFixed(2));
                     fileSizeValueTotal = parseFloat((fileSizeValueTotal + fileSizeValue).toFixed(2));
 
@@ -239,23 +252,32 @@
                     } else {
                         $('.fileSizeTotal').html("파일업로드 총 용량 : " + fileSizeValueTotal.toFixed(2) + "MB");
                     }
-                    
+                    /* fileList에 tmp에서 받아온 file push */
                     fileList.push(file);
-                    
-                    /* 파일 완료를 알릴 아이콘 추가 (완료전) */
 
+                    /* 파일 완료를 알릴 아이콘 추가 (완료전) */
                     addFileTxt = '<div class="addFileTxt_file">';
                     addFileTxt += '<p class="addFileTxt_file_name" style="display:inline-block;">';
                     addFileTxt += file.name;
                     addFileTxt += '</p>';
-                    addFileTxt += '<img src="../image/circle.png" class="circle' +iconNumber+'"style="display:inline-block; width:17px; height:17px; margin-top:2px; float:right;">';
-
+                    addFileTxt += '<img src="../image/circle.png" class="circle' + iconNumber + '"style="display:inline-block; width:17px; height:17px; margin-top:2px; float:right;">';
                     addFileTxt += '</img>';
+                    addFileTxt += '<span class="addFileTxt_file_size" style="float:right; margin-right:10px; margin-top:3px; font-size:12px;">';
+                    if (fileSizeValue > 1000) {
+                        fileSizeValue = (fileSizeValue / 1024).toFixed(2);
+                        addFileTxt += fileSizeValue + "GB";
+                    } else {
+                        addFileTxt += fileSizeValue + "MB";
+                    }
+
+                    addFileTxt += '</span>';
                     addFileTxt += '</div>';
+
+
                     $('.fileListTxt_wrap').append(addFileTxt);
 
                     iconNumber++;
-                }
+                });
             }
         });
 
@@ -268,6 +290,7 @@
                         console.log("success 3");
                         $('.progress-bar').text("업로드가 완료되었습니다.");
 
+                        select_target.disabled = false;
                         upload_target.disabled = false;
                         delete_target.disabled = false;
                     }
@@ -319,15 +342,16 @@
                         if (evt.lengthComputable) {
                             var percentComplete = Math.round((evt.loaded / evt.total) * 100);
 
-                            $('.fileSizeProgress').text(evt.loaded);
                             $('.progress-bar').css('width', percentComplete + '%').attr('aria-valuenow', percentComplete);
                             $('.progress-bar').text(percentComplete + '%');
 
+                            select_target.disabled = true;
                             upload_target.disabled = true;
                             delete_target.disabled = true;
 
                             if ($('.progress-bar').text() == '100%') {
                                 $('.progress-bar').text('로컬폴더 업로드 진행중...');
+                                console.log('로컬폴더 업로드 진행중...');
                             }
                             console.log(percentComplete);
                         }
@@ -349,6 +373,7 @@
                     fileSizeValueTotal = 0;
                     $('.fileSizeTotal').css('display','none');
 
+                    $('.fileSizeProgress').attr('text', 'test');
                     $('.addFileTxt_file').remove();
                     $('.progress_wrap').css('display', 'none');
                     $('.fileListTxt').css('display', 'none');

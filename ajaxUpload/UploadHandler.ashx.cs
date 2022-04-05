@@ -50,8 +50,7 @@ namespace DMSTransPC.SubForm
             context.Response.ContentType = "text/plain";
             context.Response.Write("success");
         }
-        /* 파일 저장 절대 경로 지정 */
-        //fileName = "D:\\uploads\\" + fileName;
+       
         public bool IsReusable
         {
             get
