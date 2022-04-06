@@ -215,17 +215,32 @@
         const delete_target = document.getElementById('btnDelete');
         const select_target = document.getElementById('files');
         var tmp = []; /* 선택된 파일 담길 리스트 선언 및 초기화 */
+        var uploadFileName = "";
         upload_target.disabled = false;
         delete_target.disabled = false;
-        console.log("파일 체인지까지 안간상태");
+        
         $('.selectFile').change(function () {
-            console.log("change");
-
-            var maxSize = 2147483648;
-
+            
+            uploadFileName = document.getElementById('files').files[0].name;
+            
             /* 선택된 파일 tmp에 담음 */
             tmp = document.getElementById('files').files;
 
+            // fileList에 담아놨던 파일의 길이만큼 반복해서 fileList에 있는 파일이름과 방금 선택한 파일이름이 같은지 확인 후 false
+            if (1 < fileList.length) {
+                for (var k = 0; k < fileList.length; k++) {
+                    /* fileList 파일 이름 검사 */
+                    if (fileList[k].name == uploadFileName) {
+                        // 방금 선택된 파일 이름 초기화
+                        uploadFileName = "";
+                        alert("같은 파일이 파일리스트에 이미 존재합니다.");
+                        return false;
+                    }
+                }
+            }
+            
+            var maxSize = 2147483648;
+            
             var tmp_size = document.getElementById('files').files[0].size;
             
             if (fileList == undefined) {
@@ -243,9 +258,6 @@
                 $.each(tmp, function (idx, file) {
                     fileSizeValue = parseFloat((file.size / (1024 * 1024)).toFixed(2));
                     fileSizeValueTotal = parseFloat((fileSizeValueTotal + fileSizeValue).toFixed(2));
-
-                    console.log("fileSizeValue = " + fileSizeValue);
-                    console.log("fileSizeValueTotal = " + fileSizeValueTotal);
 
                     if (fileSizeValueTotal > 1000) {
                         $('.fileSizeTotal').html("파일업로드 총 용량 : " + (fileSizeValueTotal / 1024).toFixed(2) + "GB");
