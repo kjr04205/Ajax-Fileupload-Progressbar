@@ -175,7 +175,7 @@
                 <label class="input-file-button" for="files">Select Files</label>
                 <button type="button" class="btn btn-primary" id="btnUpload">Upload</button>
                 <button type="button" class="btn btn-primary" id="btnDelete">Clear List</button>
-                <input type="file" id="files" class="selectFile" multiple="multiple" />
+                <input type="file" id="files" class="selectFile" multiple="multiple" accept="video/*" />
             
             </div>
             <div class="fileSize">
@@ -209,25 +209,34 @@
         var fileSizeValue = 0;
         var fileSizeValueTotal = 0;
         var index = 0;
+        var length = 1;
+
         var folderName = "";
         var folderValue = "";
         const upload_target = document.getElementById('btnUpload');
         const delete_target = document.getElementById('btnDelete');
         const select_target = document.getElementById('files');
+
         var tmp = []; /* 선택된 파일 담길 리스트 선언 및 초기화 */
         var uploadFileName = "";
+
         upload_target.disabled = false;
         delete_target.disabled = false;
-        
+
         $('.selectFile').change(function () {
             
             uploadFileName = document.getElementById('files').files[0].name;
+
+            if (uploadFileName.substring(uploadFileName.lastIndexOf(".") + 1, uploadFileName.length).search("mp4") == -1) {
+                alert("mp4 확장자의 파일만 업로드 가능합니다.");
+                return false;
+            }
             
             /* 선택된 파일 tmp에 담음 */
             tmp = document.getElementById('files').files;
 
             // fileList에 담아놨던 파일의 길이만큼 반복해서 fileList에 있는 파일이름과 방금 선택한 파일이름이 같은지 확인 후 false
-            if (1 < fileList.length) {
+            if (length < fileList.length) {
                 for (var k = 0; k < fileList.length; k++) {
                     /* fileList 파일 이름 검사 */
                     if (fileList[k].name == uploadFileName) {
@@ -238,7 +247,7 @@
                     }
                 }
             }
-            
+            /* 웹서버 파일업로드 최대 2GB 제한 */
             var maxSize = 2147483648;
             
             var tmp_size = document.getElementById('files').files[0].size;
@@ -275,6 +284,7 @@
                     addFileTxt += '<img src="../image/circle.png" class="circle' + iconNumber + '"style="display:inline-block; width:17px; height:17px; margin-top:2px; float:right;">';
                     addFileTxt += '</img>';
                     addFileTxt += '<span class="addFileTxt_file_size" style="float:right; margin-right:10px; margin-top:3px; font-size:12px;">';
+
                     if (fileSizeValue > 1000) {
                         fileSizeValue = (fileSizeValue / 1024).toFixed(2);
                         addFileTxt += fileSizeValue + "GB";
@@ -284,7 +294,6 @@
 
                     addFileTxt += '</span>';
                     addFileTxt += '</div>';
-
 
                     $('.fileListTxt_wrap').append(addFileTxt);
 
